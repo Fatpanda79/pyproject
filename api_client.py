@@ -6,6 +6,20 @@ import requests
 
 API_BASE = "http://127.0.0.1:8000"  # Make sure API is running
 
+def adminPanel():
+    print("welcome to admin panel")
+
+def askAdmin():
+    try:
+        password = input("type the password to access admin panel")
+        if password == "admin123":
+            adminPanel()
+        else:
+            print("the password is wrong try again")
+            askAdmin()
+    except Exception as e:
+        print("Error:", e)
+
 def call_square_root():
     try:
         value = int(input("Enter an integer: "))
@@ -66,10 +80,8 @@ def menu():
     print("\n==============================")
     print("   API FUNCTION CONSOLE MENU  ")
     print("==============================")
-    print("1. Get Square Root")
-    print("2. Get Range Sum")
-    print("3. Process Dictionary1")
-    print("4. Process Dictionary2")
+    print("1. Admin ")
+    print("2. Customer ")
     print("5. Exit")
     print("==============================")
 
@@ -79,7 +91,7 @@ def main():
         choice = input("Enter your choice (1-4): ").strip()
         
         if choice == "1":
-            call_square_root()
+            askAdmin()
         elif choice == "2":
             call_range_sum()
         elif choice == "3":
