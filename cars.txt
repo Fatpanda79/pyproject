@@ -1,0 +1,2 @@
+1,mitshubishi,suv,1000,booked
+2,mazda,convertable,2000,available
