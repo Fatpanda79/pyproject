@@ -207,6 +207,22 @@ def customer_menu():
 #         print("\nResponse age:", result['received_data']['age'])
 #     except Exception as e:
 #         print("Error:", e)
+def customer_panel():
+    print("1) Signup")
+    print("2) Login")
+    print("3) Return to Home")
+
+    choice = input("choose between 1 to 3: ")
+    if choice == "1":
+        add_customer()
+    elif choice == "2":
+        logincustomer()
+    elif choice == "3":
+        main()
+    else:
+        print("please choose between 1 or 3")
+        customer_panel()
+
 def add_customer():
 
     name = input("Enter customer name: ").strip()
@@ -232,6 +248,21 @@ def add_customer():
 
 
 
+def logincustomer():
+    customer_name = input("enter user name").strip()
+    customer_pass = input("enter user password").strip()
+
+    response = requests.post(f"{API_BASE}/login",
+        json={"customer_name": customer_name, "customer_password": customer_pass}
+    )
+
+    if response.status_code == 200:
+        print("login successful")
+    else:
+        print("not successful")
+
+
+
 
 def menu():
     print("\n==============================")
@@ -251,8 +282,8 @@ def main():
         if choice == "1":
             askAdmin()
         elif choice == "2":
-            add_customer()
-            #customer_menu()
+            #add_customer()
+            customer_panel()
         elif choice == "3":
             print("Exiting program. Goodbye!")
             break
