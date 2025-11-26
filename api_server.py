@@ -132,17 +132,19 @@ def available_cars():
     available = [c for c in cars if c["status"] == "available"]
     return {"cars": available, "count": len(available)}
 
-@app.post("/cars/{car_id}/book")
-def book_car(car_id: int):
-    cars = read_cars()
-    car = find_car(cars, car_id)
-    if not car:
-        raise HTTPException(status_code=404, detail="Car not found")
-    if car["status"] != "available":
-        raise HTTPException(status_code=400, detail="Car is not available")
-    car["status"] = "booked"
-    write_cars(cars)
-    return {"message": "Car booked", "car": car}
+# @app.post("/cars/{car_id}/book")
+# def book_car(car_id: int):
+#     cars = read_cars()
+#     car = find_car(cars, car_id)
+#     if not car:
+#         raise HTTPException(status_code=404, detail="Car not found")
+#     if car["status"] != "available":
+#         raise HTTPException(status_code=400, detail="Car is not available")
+#     car["status"] = "booked"
+#     write_cars(cars)
+#     return {"message": "Car booked", "car": car}
+
+#------------------------------>
 
 
 class CustomerIn(BaseModel):
@@ -200,6 +202,97 @@ def login(customer: CustomerIn):
 
     for c in customers:
         if c["customer_name"] == customer.customer_name and c["customer_password"] == customer.customer_password:
-            return {"message": "Login successful", "customer": c}
-
+            return {
+                "message": "Login successful",
+                "customer": {
+                    "customer_id": c["customer_id"],
+                    "customer_name": c["customer_name"]
+                }
+            }
     raise HTTPException(status_code=401, detail="Invalid username or password")
+
+
+RENT_FILE = "rent.txt"
+
+def read_rents():
+    rents = []
+    if not os.path.exists(RENT_FILE):
+        open(RENT_FILE, "w").close()
+
+    with open(RENT_FILE, "r", encoding="utf-8") as f:
+        for line in f:
+            line = line.strip()
+            if not line:
+                continue
+            parts = line.split(",")
+            rents.append({
+                "rent_id": int(parts[0]),
+                "customer_id": int(parts[1]),
+                "car_id": int(parts[2])
+            })
+    return rents
+
+def write_rents(rents):
+    fd, tmpname = tempfile.mkstemp()
+    with os.fdopen(fd, 'w', encoding="utf-8") as tmp:
+        for r in rents:
+            tmp.write(f'{r["rent_id"]},{r["customer_id"]},{r["car_id"]}\n')
+    os.replace(tmpname, RENT_FILE)
+
+def next_rent_id(rents):
+    if not rents:
+        return 1
+    return max(r["rent_id"] for r in rents) + 1
+
+
+@app.post("/cars/{car_id}/book/")
+def book_car(car_id: int, customer_id: int):
+    customers = read_customers()
+    cars = read_cars()
+    rents = read_rents()
+
+    car = find_car(cars, car_id)
+    if not car:
+        raise HTTPException(status_code=404, detail="Car not found")
+
+    if not any(c["customer_id"] == customer_id for c in customers):
+        raise HTTPException(status_code=404, detail="Customer not found")
+
+    if car["status"] != "available":
+        raise HTTPException(status_code=400, detail="Car is not available")
+    
+    car["status"] = "booked"
+    write_cars(cars)
+
+    new_id = next_rent_id(rents)
+    rents.append({
+        "rent_id": new_id,
+        "customer_id": customer_id,
+        "car_id": car_id
+    })
+    write_rents(rents)
+
+    return {"message": "Car booked", "rent_id": new_id}
+
+
+@app.get("/customers/{customer_id}/rents")
+def getCustomerrents(customer_id: int):
+    rents = read_rents()
+    cars = read_cars()
+
+    customer_rents = [r for r in rents if r["customer_id"] == customer_id]
+
+    if not customer_rents:
+        return {"message": "No rented cars found", "cars": []}
+
+    rented_cars = []
+    for rent in customer_rents:
+        for car in cars:
+            if car["car_id"] == rent["car_id"]:
+                rented_cars.append(car)
+
+    return {
+        "customer_id": customer_id,
+        "count": len(rented_cars),
+        "cars": rented_cars
+    }

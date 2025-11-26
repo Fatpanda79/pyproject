@@ -121,92 +121,43 @@ def askAdmin():
     except Exception as e:
         print("Error:", e)
 
-
-def customer_menu():
-    print("\n--- CUSTOMER BOOKING ---")
-
-    try:
-        response = requests.get(f"{API_BASE}/cars/available")
-        if response.status_code == 200:
-            data = response.json()
-            cars = data.get("cars", [])
-
-            if not cars:
-                print("No cars currently available.")
-                return
-
-            print(f"\nAvailable Cars: {len(cars)}")
-            for car in cars:
-                print(f"[ID: {car['car_id']}] {car['car_name']} ({car['car_type']}) - ${car['price']}/day")
-
-            book_id = input("\nEnter Car ID to book (or press Enter to cancel): ")
-            if book_id:
-                res = requests.post(f"{API_BASE}/cars/{book_id}/book")
-                if res.status_code == 200:
-                    print(f"SUCCESS: You have booked the car!")
-                else:
-                    print(f"Failed: {res.json().get('detail')}")
-        else:
-            print("Could not fetch available cars.")
-    except Exception as e:
-        print("Error:", e)
+#--------------------------------------------------------------->
 
 
-# def call_square_root():
+
+# customer_id = None
+
+# def customer_menu():
+#     print("\n--- CUSTOMER BOOKING ---")
+
 #     try:
-#         value = int(input("Enter an integer: "))
-#         response = requests.get(f"{API_BASE}/sqrt", params={"value": value})
-#         result = response.json()   # Convert API response to dict automatically
-#         print("\nResponse:", result)
-#         print("\nResponse input:", result['input'])
-#         print("\nResponse square_root:", result['square_root'])
+#         response = requests.get(f"{API_BASE}/cars/available")
+#         if response.status_code == 200:
+#             data = response.json()
+#             cars = data.get("cars", [])
+            
+
+#             if not cars:
+#                 print("No cars currently available.")
+#                 return
+
+#             print(f"\nAvailable Cars: {len(cars)}")
+#             for car in cars:
+#                 print(f"[ID: {car['car_id']}] {car['car_name']} ({car['car_type']}) - ${car['price']}/day")
+
+#             book_id = input("\nEnter Car ID to book (or press Enter to cancel): ")
+#             if book_id:
+#                 res = requests.post(f"{API_BASE}/cars/{book_id}/book/{customer_id}")
+#                 if res.status_code == 200:
+#                     print(f"SUCCESS: You have booked the car!")
+#                 else:
+#                     print(f"Failed: {res.json().get('detail')}")
+#         else:
+#             print("Could not fetch available cars.")
 #     except Exception as e:
 #         print("Error:", e)
 
-# def call_range_sum():
-#     try:
-#         from_param = int(input("Enter from_param: "))
-#         to_param = int(input("Enter to_param: "))
-#         response = requests.get(f"{API_BASE}/range_sum", params={"from_param": from_param, "to_param": to_param})
-#         result = response.json()
-#         print("\nResponse:", result)
-#         print("\nResponse from:", result['from'])
-#         print("\nResponse to:", result['to'])
-#         print("\nResponse sum:", result['sum'])
-#     except Exception as e:
-#         print("Error:", e)
 
-# def call_process_dict1():
-#     try:
-#         data = {}
-#         data["name"] = input("Enter your name: ")
-#         data["age"] = input("Enter your age: ")
-#
-#         payload = {"data": data}
-#         response = requests.post(f"{API_BASE}/process_dict1", json=payload)
-#         result = response.json()
-#
-#         print("\nResponse:", result)
-#         print("\nResponse name:", result['received_data']['data']['name'])
-#         print("\nResponse age:", result['received_data']['data']['age'])
-#     except Exception as e:
-#         print("Error:", e)
-#
-# def call_process_dict2():
-#     try:
-#         data = {}
-#         data["name"] = input("Enter your name: ")
-#         data["age"] = input("Enter your age: ")
-#
-#         payload = {"data": data}
-#         response = requests.post(f"{API_BASE}/process_dict2", json=payload)
-#         result = response.json()
-#
-#         print("\nResponse:", result)
-#         print("\nResponse name:", result['received_data']['name'])
-#         print("\nResponse age:", result['received_data']['age'])
-#     except Exception as e:
-#         print("Error:", e)
 def customer_panel():
     print("1) Signup")
     print("2) Login")
@@ -249,6 +200,7 @@ def add_customer():
 
 
 def logincustomer():
+    global customer_id
     customer_name = input("enter user name").strip()
     customer_pass = input("enter user password").strip()
 
@@ -258,12 +210,78 @@ def logincustomer():
 
     if response.status_code == 200:
         print("login successful")
+        if response.status_code == 200:
+            data = response.json()
+            customer_id = data["customer"]["customer_id"]
+            print("login successful")
+            #print(data["customer"]["customer_id"] )
+            customerRentpanel(customer_id)                
     else:
         print("not successful")
 
+def customerRentpanel(customer_id):
+    print("1) rent a car")
+    print("2) cancel rented car")
+    choice = input("choose between 1 - 2: ")
+    if choice == "1":
+        customer_menu(customer_id)
+    elif choice == "2":
+        viewRentedcars(customer_id)
+
+def customer_menu(customer_id):
+    print("\n--- CUSTOMER BOOKING ---")
+
+    try:
+        response = requests.get(f"{API_BASE}/cars/available")
+
+        if response.status_code != 200:
+            print("Could not fetch available cars.")
+            return
+
+        data = response.json()
+        cars = data.get("cars", [])
+
+        if not cars:
+            print("No cars currently available.")
+            return
+        print(f"\nAvailable Cars: {len(cars)}")
+        for car in cars:
+            print(f"[ID: {car['car_id']}] {car['car_name']} ({car['car_type']}) - ${car['price']}/day")
+
+        book_id = input("\nEnter Car ID to book (or press Enter to cancel): ").strip()
+        if not book_id:
+            print("Cancelled.")
+            return
+        
+        res = requests.post(
+            f"{API_BASE}/cars/{book_id}/book/",
+            params={"customer_id": customer_id}  # <-- send as query
+        )
+
+        if res.status_code == 200:
+            print("\n Car booked!")
+        else:
+            print("error:", res.json().get("detail"))
+
+    except Exception as e:
+        print("Error:", str(e))
 
 
 
+def viewRentedcars(customer_id):
+    try:
+        response = requests.get(f"{API_BASE}/customers/{customer_id}/rents")
+        data = response.json()
+
+        if "cars" not in data or len(data["cars"]) == 0:
+            print("You have not rented any cars yet.")
+            return
+
+        print(f"\nYou rented {len(data['cars'])} cars:\n")
+        for car in data["cars"]:
+            print(f"[ID: {car['car_id']}] {car['car_name']} ({car['car_type']}) - ${car['price']} - Status: {car['status']}")
+    except Exception as e:
+        print("Error:", e)
 
 def menu():
     print("\n==============================")
