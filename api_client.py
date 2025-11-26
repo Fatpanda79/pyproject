@@ -264,6 +264,7 @@ def logincustomer():
 
 
 
+
 def menu():
     print("\n==============================")
     print("   API FUNCTION CONSOLE MENU  ")
@@ -271,7 +272,7 @@ def menu():
     print("1. Admin ")
     print("2. Customer ")
     print("3. Exit")
-    print("==============================")
+    print("===============================")
 
 
 def main():
