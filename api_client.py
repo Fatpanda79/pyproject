@@ -207,6 +207,31 @@ def customer_menu():
 #         print("\nResponse age:", result['received_data']['age'])
 #     except Exception as e:
 #         print("Error:", e)
+def add_customer():
+
+    name = input("Enter customer name: ").strip()
+    password = input("Enter customer password: ").strip()
+    payload = {
+        "customer_name": name,
+        "customer_password": password
+    }
+
+    try:
+        response = requests.post(f"{API_BASE}/customers", json=payload)
+        data = response.json()
+
+        if response.status_code == 200:
+            print("Customer added successfully!")
+            print(f"ID: {data['customer']['customer_id']}")
+            print(f"Name: {data['customer']['customer_name']}")
+        else:
+            print("Failed to add customer:", data.get("detail", data))
+
+    except Exception as e:
+        print("Error:", e)
+
+
+
 
 def menu():
     print("\n==============================")
@@ -226,7 +251,8 @@ def main():
         if choice == "1":
             askAdmin()
         elif choice == "2":
-            customer_menu()
+            add_customer()
+            #customer_menu()
         elif choice == "3":
             print("Exiting program. Goodbye!")
             break

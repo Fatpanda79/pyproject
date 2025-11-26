@@ -18,9 +18,14 @@ app = FastAPI(
 
 DATA_FILE = "cars.txt"
 
+CUSTOMER_FILE = "customer.txt"
+
 
 if not os.path.exists(DATA_FILE):
     with open(DATA_FILE, "w", encoding="utf-8") as f:
+        f.write("")
+if not os.path.exists(CUSTOMER_FILE):
+    with open(CUSTOMER_FILE, "w", encoding="utf-8") as f:
         f.write("")
 
 
@@ -138,3 +143,53 @@ def book_car(car_id: int):
     car["status"] = "booked"
     write_cars(cars)
     return {"message": "Car booked", "car": car}
+
+
+class CustomerIn(BaseModel):
+    customer_name: str
+    customer_password: str
+
+def read_customers():
+    customers = []
+    if not os.path.exists(CUSTOMER_FILE):
+        open(CUSTOMER_FILE, "w").close()
+    with open(CUSTOMER_FILE, "r", encoding="utf-8") as f:
+        for line in f:
+            line = line.strip()
+            if not line:
+                continue
+            parts = line.split(",")
+            if len(parts) < 3:
+                continue
+            customers.append({
+                "customer_id": int(parts[0]),
+                "customer_name": parts[1],
+                "customer_password": parts[2]
+            })
+    return customers
+
+def new_customer_id(customers):
+    if not customers:
+        return 1
+    return max(c["customer_id"] for c in customers) + 1
+
+def write_customers(customers):
+    fd, tmpname = tempfile.mkstemp()
+    with os.fdopen(fd, 'w', encoding="utf-8") as tmp:
+        for c in customers:
+            line = f'{c["customer_id"]},{c["customer_name"]},{c["customer_password"]}\n'
+            tmp.write(line)
+    os.replace(tmpname, CUSTOMER_FILE)
+
+@app.post("/customers")
+def add_customer(customer: CustomerIn):
+    customers = read_customers()
+    new_id = new_customer_id(customers)
+    new_customer = {
+        "customer_id": new_id,
+        "customer_name": customer.customer_name,
+        "customer_password": customer.customer_password
+    }
+    customers.append(new_customer)
+    write_customers(customers)
+    return {"message": "Customer added", "customer": new_customer}
