@@ -193,3 +193,13 @@ def add_customer(customer: CustomerIn):
     customers.append(new_customer)
     write_customers(customers)
     return {"message": "Customer added", "customer": new_customer}
+
+@app.post("/login")
+def login(customer: CustomerIn):
+    customers = read_customers()
+
+    for c in customers:
+        if c["customer_name"] == customer.customer_name and c["customer_password"] == customer.customer_password:
+            return {"message": "Login successful", "customer": c}
+
+    raise HTTPException(status_code=401, detail="Invalid username or password")
