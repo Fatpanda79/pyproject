@@ -212,44 +212,44 @@ def login(customer: CustomerIn):
     raise HTTPException(status_code=401, detail="Invalid username or password")
 
 
-RENT_FILE = "rent.txt"
+Booking_FILE = "Booking.txt"
 
-def read_rents():
-    rents = []
-    if not os.path.exists(RENT_FILE):
-        open(RENT_FILE, "w").close()
+def read_Bookings():
+    Bookings = []
+    if not os.path.exists(Booking_FILE):
+        open(Booking_FILE, "w").close()
 
-    with open(RENT_FILE, "r", encoding="utf-8") as f:
+    with open(Booking_FILE, "r", encoding="utf-8") as f:
         for line in f:
             line = line.strip()
             if not line:
                 continue
             parts = line.split(",")
-            rents.append({
-                "rent_id": int(parts[0]),
+            Bookings.append({
+                "Booking_id": int(parts[0]),
                 "customer_id": int(parts[1]),
                 "car_id": int(parts[2])
             })
-    return rents
+    return Bookings
 
-def write_rents(rents):
+def write_Bookings(Bookings):
     fd, tmpname = tempfile.mkstemp()
     with os.fdopen(fd, 'w', encoding="utf-8") as tmp:
-        for r in rents:
-            tmp.write(f'{r["rent_id"]},{r["customer_id"]},{r["car_id"]}\n')
-    os.replace(tmpname, RENT_FILE)
+        for r in Bookings:
+            tmp.write(f'{r["Booking_id"]},{r["customer_id"]},{r["car_id"]}\n')
+    os.replace(tmpname, Booking_FILE)
 
-def next_rent_id(rents):
-    if not rents:
+def next_Booking_id(Bookings):
+    if not Bookings:
         return 1
-    return max(r["rent_id"] for r in rents) + 1
+    return max(r["Booking_id"] for r in Bookings) + 1
 
 
 @app.post("/cars/{car_id}/book/")
 def book_car(car_id: int, customer_id: int):
     customers = read_customers()
     cars = read_cars()
-    rents = read_rents()
+    Bookings = read_Bookings()
 
     car = find_car(cars, car_id)
     if not car:
@@ -264,35 +264,35 @@ def book_car(car_id: int, customer_id: int):
     car["status"] = "booked"
     write_cars(cars)
 
-    new_id = next_rent_id(rents)
-    rents.append({
-        "rent_id": new_id,
+    new_id = next_Booking_id(Bookings)
+    Bookings.append({
+        "Booking_id": new_id,
         "customer_id": customer_id,
         "car_id": car_id
     })
-    write_rents(rents)
+    write_Bookings(Bookings)
 
-    return {"message": "Car booked", "rent_id": new_id}
+    return {"message": "Car booked", "Booking_id": new_id}
 
 
-@app.get("/customers/{customer_id}/rents")
-def getCustomerrents(customer_id: int):
-    rents = read_rents()
+@app.get("/customers/{customer_id}/Bookings")
+def getCustomerBookings(customer_id: int):
+    Bookings = read_Bookings()
     cars = read_cars()
 
-    customer_rents = [r for r in rents if r["customer_id"] == customer_id]
+    customer_Bookings = [r for r in Bookings if r["customer_id"] == customer_id]
 
-    if not customer_rents:
-        return {"message": "No rented cars found", "cars": []}
+    if not customer_Bookings:
+        return {"message": "No Bookinged cars found", "cars": []}
 
-    rented_cars = []
-    for rent in customer_rents:
+    Booked_cars = []
+    for Booking in customer_Bookings:
         for car in cars:
-            if car["car_id"] == rent["car_id"]:
-                rented_cars.append(car)
+            if car["car_id"] == Booking["car_id"]:
+                Booked_cars.append(car)
 
     return {
         "customer_id": customer_id,
-        "count": len(rented_cars),
-        "cars": rented_cars
+        "count": len(Booked_cars),
+        "cars": Booked_cars
     }
