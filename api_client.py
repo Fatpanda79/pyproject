@@ -215,13 +215,13 @@ def logincustomer():
             customer_id = data["customer"]["customer_id"]
             print("login successful")
             #print(data["customer"]["customer_id"] )
-            customerRentpanel(customer_id)                
+            customerBookingpanel(customer_id)                
     else:
         print("not successful")
 
-def customerRentpanel(customer_id):
-    print("1) rent a car")
-    print("2) cancel rented car")
+def customerBookingpanel(customer_id):
+    print("1) Book a car")
+    print("2) cancel Booked car")
     choice = input("choose between 1 - 2: ")
     if choice == "1":
         customer_menu(customer_id)
@@ -246,7 +246,7 @@ def customer_menu(customer_id):
             return
         print(f"\nAvailable Cars: {len(cars)}")
         for car in cars:
-            print(f"[ID: {car['car_id']}] {car['car_name']} ({car['car_type']}) - ${car['price']}/day")
+            print(f"[ID: {car['car_id']}] {car['car_name']} ({car['car_type']}) - ${car['price']}")
 
         book_id = input("\nEnter Car ID to book (or press Enter to cancel): ").strip()
         if not book_id:
@@ -255,7 +255,7 @@ def customer_menu(customer_id):
         
         res = requests.post(
             f"{API_BASE}/cars/{book_id}/book/",
-            params={"customer_id": customer_id}  # <-- send as query
+            params={"customer_id": customer_id}  
         )
 
         if res.status_code == 200:
@@ -270,7 +270,7 @@ def customer_menu(customer_id):
 
 def viewRentedcars(customer_id):
     try:
-        response = requests.get(f"{API_BASE}/customers/{customer_id}/rents")
+        response = requests.get(f"{API_BASE}/customers/{customer_id}/bookings")
         data = response.json()
 
         if "cars" not in data or len(data["cars"]) == 0:
