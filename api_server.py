@@ -20,7 +20,6 @@ DATA_FILE = "cars.txt"
 
 CUSTOMER_FILE = "customer.txt"
 
-
 if not os.path.exists(DATA_FILE):
     with open(DATA_FILE, "w", encoding="utf-8") as f:
         f.write("")
@@ -48,6 +47,7 @@ def read_cars():
             })
     return cars
 
+
 def write_cars(cars):
     fd, tmpname = tempfile.mkstemp()
     with os.fdopen(fd, 'w', encoding="utf-8") as tmp:
@@ -56,10 +56,12 @@ def write_cars(cars):
             tmp.write(line)
     os.replace(tmpname, DATA_FILE)
 
+
 def next_id(cars):
     if not cars:
         return 1
     return max(c["car_id"] for c in cars) + 1
+
 
 def find_car(cars, car_id):
     for c in cars:
@@ -67,10 +69,12 @@ def find_car(cars, car_id):
             return c
     return None
 
+
 class CarIn(BaseModel):
     car_name: str
     car_type: str
     price: str
+
 
 class CarUpdate(BaseModel):
     car_name: Optional[str]
@@ -78,11 +82,13 @@ class CarUpdate(BaseModel):
     price: Optional[str]
     status: Optional[str]
 
+
 # Routes
 @app.get("/cars")
 def list_cars():
     cars = read_cars()
     return {"cars": cars, "count": len(cars)}
+
 
 @app.post("/cars")
 def add_car(car: CarIn):
@@ -99,6 +105,7 @@ def add_car(car: CarIn):
     write_cars(cars)
     return {"message": "Car added", "car": new_car}
 
+
 @app.put("/cars/{car_id}")
 def update_car(car_id: int, update: CarUpdate):
     cars = read_cars()
@@ -109,12 +116,15 @@ def update_car(car_id: int, update: CarUpdate):
         car["car_name"] = update.car_name
     if update.car_type is not None:
         car["car_type"] = update.car_type
+
     if update.price is not None:
         car["price"] = update.price
     if update.status is not None:
         car["status"] = update.status
+
     write_cars(cars)
     return {"message": "Car updated", "car": car}
+
 
 @app.delete("/cars/{car_id}")
 def delete_car(car_id: int):
@@ -126,11 +136,13 @@ def delete_car(car_id: int):
     write_cars(cars)
     return {"message": "Car removed", "car_id": car_id}
 
+
 @app.get("/cars/available")
 def available_cars():
     cars = read_cars()
     available = [c for c in cars if c["status"] == "available"]
     return {"cars": available, "count": len(available)}
+
 
 # @app.post("/cars/{car_id}/book")
 # def book_car(car_id: int):
@@ -144,12 +156,17 @@ def available_cars():
 #     write_cars(cars)
 #     return {"message": "Car booked", "car": car}
 
-#------------------------------>
+# ------------------------------>
 
 
 class CustomerIn(BaseModel):
     customer_name: str
     customer_password: str
+
+class CustomerUpdate(BaseModel):
+    customer_name: Optional[str]
+    customer_password: Optional[str]
+
 
 def read_customers():
     customers = []
@@ -170,10 +187,12 @@ def read_customers():
             })
     return customers
 
+
 def new_customer_id(customers):
     if not customers:
         return 1
     return max(c["customer_id"] for c in customers) + 1
+
 
 def write_customers(customers):
     fd, tmpname = tempfile.mkstemp()
@@ -182,6 +201,7 @@ def write_customers(customers):
             line = f'{c["customer_id"]},{c["customer_name"]},{c["customer_password"]}\n'
             tmp.write(line)
     os.replace(tmpname, CUSTOMER_FILE)
+
 
 @app.post("/customers")
 def add_customer(customer: CustomerIn):
@@ -195,6 +215,7 @@ def add_customer(customer: CustomerIn):
     customers.append(new_customer)
     write_customers(customers)
     return {"message": "Customer added", "customer": new_customer}
+
 
 @app.post("/login")
 def login(customer: CustomerIn):
@@ -211,8 +232,47 @@ def login(customer: CustomerIn):
             }
     raise HTTPException(status_code=401, detail="Invalid username or password")
 
+@app.put("/customers/{customer_id}")
+def update_customer(customer_id: int, update: CustomerUpdate):
+    customers = read_customers()
+    customer = None
+
+    for c in customers:
+        if c["customer_id"] == customer_id:
+            customer = c
+            break
+
+    if not customer:
+        raise HTTPException(status_code=404, detail="Customer not found")
+
+    if update.customer_name is not None:
+        customer["customer_name"] = update.customer_name
+
+    if update.customer_password is not None:
+        customer["customer_password"] = update.customer_password
+
+    write_customers(customers)
+
+    return {"message": "Customer updated", "customer": customer}
+
+@app.delete("/customers/{customer_id}")
+def delete_customer(customer_id: int):
+    customers = read_customers()
+
+    exists = any(c["customer_id"] == customer_id for c in customers)
+    if not exists:
+        raise HTTPException(status_code=404, detail="Customer not found")
+
+    customers = [c for c in customers if c["customer_id"] != customer_id]
+
+    write_customers(customers)
+
+    return {"message": "Customer deleted", "customer_id": customer_id}
+
+
 
 Booking_FILE = "Booking.txt"
+
 
 def read_Bookings():
     Bookings = []
@@ -232,12 +292,14 @@ def read_Bookings():
             })
     return Bookings
 
+
 def write_Bookings(Bookings):
     fd, tmpname = tempfile.mkstemp()
     with os.fdopen(fd, 'w', encoding="utf-8") as tmp:
         for r in Bookings:
             tmp.write(f'{r["Booking_id"]},{r["customer_id"]},{r["car_id"]}\n')
     os.replace(tmpname, Booking_FILE)
+
 
 def next_Booking_id(Bookings):
     if not Bookings:
@@ -260,7 +322,7 @@ def book_car(car_id: int, customer_id: int):
 
     if car["status"] != "available":
         raise HTTPException(status_code=400, detail="Car is not available")
-    
+
     car["status"] = "booked"
     write_cars(cars)
 
@@ -296,3 +358,37 @@ def getCustomerBookings(customer_id: int):
         "count": len(Booked_cars),
         "cars": Booked_cars
     }
+
+
+@app.delete("/customers/{customer_id}/cancel/{car_id}")
+def cancel_booking(customer_id: int, car_id: int):
+    customers = read_customers()
+    cars = read_cars()
+    bookings = read_Bookings()
+    if not any(c["customer_id"] == customer_id for c in customers):
+        raise HTTPException(status_code=404, detail="customer not found")
+
+
+    car = find_car(cars, car_id)
+    if not car:
+        raise HTTPException(status_code=404, detail="Car not found")
+
+    booking_found = False
+    new_bookings = []
+
+    for b in bookings:
+        if b["customer_id"] == customer_id and b["car_id"] == car_id:
+            booking_found = True
+            continue
+        new_bookings.append(b)
+
+    if not booking_found:
+        raise HTTPException(status_code=404, detail="no booking found")
+
+    car["status"] = "available"
+    write_cars(cars)
+
+
+    write_Bookings(new_bookings)
+
+    return {"message": "Car  cancelled successfully"}
