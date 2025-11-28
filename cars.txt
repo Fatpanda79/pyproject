@@ -1,2 +1,5 @@
-1,mitshubishi,suv,1000,booked
-2,mazda,convertable,2000,available
+1,mitshubishi,suv,1000,booked,2031,12334,Manual, New
+2,toyota,sedan,1200,booked,2022,45000,Automatic,Used
+3,ford,truck,1500,maintenance,2020,89200,Automatic,Used
+4,honda,hatchback,900,available,2024,500,Manual,New
+5,bmw,coupe,2200,booked,2023,12500,Automatic,Used

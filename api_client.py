@@ -14,12 +14,14 @@ def call_list_cars():
             data = response.json()
             cars = data.get("cars", [])
             print(f"\n--- Total Cars: {data.get('count', 0)} ---")
-            print(f"{'ID':<5} {'Name':<20} {'Type':<15} {'Price':<10} {'Status'}")
-            print("-" * 65)
+            print(f"{'ID':<4} {'Name':<15} {'Type':<10} {'Price':<8} {'Year':<6} {'Mileage':<10} {'Trans':<10} {'Cond':<8} {'Status'}")
+            print("-" * 95)
             for car in cars:
                 print(
-                    f"{car['car_id']:<5} {car['car_name']:<20} {car['car_type']:<15} {car['price']:<10} {car['status']}")
-            print("-" * 65)
+                    f"{car['car_id']:<4} {car['car_name']:<15} {car['car_type']:<10} {car['price']:<8} "
+                    f"{car['year']:<6} {car['mileage']:<10} {car['transmission']:<10} {car['condition']:<8} {car['status']}"
+                )
+            print("-" * 95)
         else:
             print("Failed to fetch cars:", response.text)
     except Exception as e:
@@ -32,6 +34,10 @@ def call_add_car():
         name = input("Enter car name: ").strip()
         ctype = input("Enter car type: ").strip()
         price = input("Enter price per day: ").strip()
+        year = input("Enter Year (e.g. 2022): ").strip()
+        mileage = input("Enter Mileage (e.g. 15000km): ").strip()
+        transmission = input("Enter Transmission (e.g. Auto): ").strip()
+        condition = input("Enter Condition (e.g. Used): ").strip()
 
         if not name or not ctype or not price:
             print("All fields are required!")
@@ -40,7 +46,11 @@ def call_add_car():
         payload = {
             "car_name": name,
             "car_type": ctype,
-            "price": price
+            "price": price,
+            "year": year,
+            "mileage": mileage,
+            "transmission": transmission,
+            "condition": condition
         }
 
         response = requests.post(f"{API_BASE}/cars", json=payload)
@@ -201,8 +211,8 @@ def add_customer():
 
 def logincustomer():
     global customer_id
-    customer_name = input("enter user name").strip()
-    customer_pass = input("enter user password").strip()
+    customer_name = input("Enter user name: ").strip()
+    customer_pass = input("Enter user password: ").strip()
 
     response = requests.post(f"{API_BASE}/login",
         json={"customer_name": customer_name, "customer_password": customer_pass}

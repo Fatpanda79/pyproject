@@ -17,7 +17,6 @@ app = FastAPI(
 )
 
 DATA_FILE = "cars.txt"
-
 CUSTOMER_FILE = "customer.txt"
 
 
@@ -37,14 +36,18 @@ def read_cars():
             if not line:
                 continue
             parts = line.split(",")
-            if len(parts) < 5:
+            if len(parts) < 9:
                 continue
             cars.append({
                 "car_id": int(parts[0]),
                 "car_name": parts[1],
                 "car_type": parts[2],
                 "price": parts[3],
-                "status": parts[4]
+                "status": parts[4],
+                "year": parts[5],
+                "mileage": parts[6],
+                "transmission": parts[7],
+                "condition": parts[8]
             })
     return cars
 
@@ -52,7 +55,7 @@ def write_cars(cars):
     fd, tmpname = tempfile.mkstemp()
     with os.fdopen(fd, 'w', encoding="utf-8") as tmp:
         for c in cars:
-            line = f'{c["car_id"]},{c["car_name"]},{c["car_type"]},{c["price"]},{c["status"]}\n'
+            line = f'{c["car_id"]},{c["car_name"]},{c["car_type"]},{c["price"]},{c["status"]},{c["year"]},{c["mileage"]},{c["transmission"]},{c["condition"]}\n'
             tmp.write(line)
     os.replace(tmpname, DATA_FILE)
 
@@ -71,12 +74,20 @@ class CarIn(BaseModel):
     car_name: str
     car_type: str
     price: str
+    year: str
+    mileage: str
+    transmission: str
+    condition: str
 
 class CarUpdate(BaseModel):
     car_name: Optional[str]
     car_type: Optional[str]
     price: Optional[str]
     status: Optional[str]
+    year: Optional[str]
+    mileage: Optional[str]
+    transmission: Optional[str]
+    condition: Optional[str]
 
 # Routes
 @app.get("/cars")
@@ -93,7 +104,11 @@ def add_car(car: CarIn):
         "car_name": car.car_name,
         "car_type": car.car_type,
         "price": car.price,
-        "status": "available"
+        "status": "available",
+        "year": car.year,
+        "mileage": car.mileage,
+        "transmission": car.transmission,
+        "condition": car.condition
     }
     cars.append(new_car)
     write_cars(cars)
@@ -113,6 +128,14 @@ def update_car(car_id: int, update: CarUpdate):
         car["price"] = update.price
     if update.status is not None:
         car["status"] = update.status
+    if update.year is not None:
+        car["year"] = update.year
+    if update.mileage is not None:
+        car["mileage"] = update.mileage
+    if update.transmission is not None:
+        car["transmission"] = update.transmission
+    if update.condition is not None:
+        car["condition"] = update.condition
     write_cars(cars)
     return {"message": "Car updated", "car": car}
 
