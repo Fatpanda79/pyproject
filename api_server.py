@@ -162,6 +162,10 @@ def available_cars():
 class CustomerIn(BaseModel):
     customer_name: str
     customer_password: str
+    
+class CustomerUpdate(BaseModel):
+    customer_name: Optional[str] = None
+    customer_password: Optional[str] = None
 
 class CustomerUpdate(BaseModel):
     customer_name: Optional[str]
@@ -217,20 +221,20 @@ def add_customer(customer: CustomerIn):
     return {"message": "Customer added", "customer": new_customer}
 
 
-@app.post("/login")
-def login(customer: CustomerIn):
+
+@app.delete("/customers/{customer_id}")
+def delete_customer(customer_id: int):
     customers = read_customers()
 
-    for c in customers:
-        if c["customer_name"] == customer.customer_name and c["customer_password"] == customer.customer_password:
-            return {
-                "message": "Login successful",
-                "customer": {
-                    "customer_id": c["customer_id"],
-                    "customer_name": c["customer_name"]
-                }
-            }
-    raise HTTPException(status_code=401, detail="Invalid username or password")
+    exists = any(c["customer_id"] == customer_id for c in customers)
+    if not exists:
+        raise HTTPException(status_code=404, detail="Customer not found")
+
+    customers = [c for c in customers if c["customer_id"] != customer_id]
+
+    write_customers(customers)
+
+    return {"message": "Customer deleted", "customer_id": customer_id}
 
 @app.put("/customers/{customer_id}")
 def update_customer(customer_id: int, update: CustomerUpdate):
@@ -352,14 +356,12 @@ def getCustomerBookings(customer_id: int):
         for car in cars:
             if car["car_id"] == Booking["car_id"]:
                 Booked_cars.append(car)
-
     return {
         "customer_id": customer_id,
         "count": len(Booked_cars),
         "cars": Booked_cars
     }
-
-
+            
 @app.delete("/customers/{customer_id}/cancel/{car_id}")
 def cancel_booking(customer_id: int, car_id: int):
     customers = read_customers()
@@ -392,3 +394,8 @@ def cancel_booking(customer_id: int, car_id: int):
     write_Bookings(new_bookings)
 
     return {"message": "Car  cancelled successfully"}
+
+
+
+   
+
