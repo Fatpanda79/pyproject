@@ -259,19 +259,6 @@ def update_customer(customer_id: int, update: CustomerUpdate):
 
     return {"message": "Customer updated", "customer": customer}
 
-@app.delete("/customers/{customer_id}")
-def delete_customer(customer_id: int):
-    customers = read_customers()
-
-    exists = any(c["customer_id"] == customer_id for c in customers)
-    if not exists:
-        raise HTTPException(status_code=404, detail="Customer not found")
-
-    customers = [c for c in customers if c["customer_id"] != customer_id]
-
-    write_customers(customers)
-
-    return {"message": "Customer deleted", "customer_id": customer_id}
 
 
 
